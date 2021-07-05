@@ -2,7 +2,7 @@ package ua.goit.jdbc.dao;
 
 import ua.goit.jdbc.config.ConnectionManager;
 import ua.goit.jdbc.dao.model.Skill;
-import ua.goit.jdbc.service.Converter;
+import ua.goit.jdbc.service.SkillService;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,10 +26,15 @@ public class SkillDAO implements DataAccessObject<Skill> {
     public LinkedList<Skill> getAll(){
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL)){
-            return Converter.toSkill(preparedStatement.executeQuery());
+            return SkillService.toSkill(preparedStatement.executeQuery());
         } catch (SQLException throwables){
             throwables.printStackTrace();
         }
+        return null;
+    }
+
+    @Override
+    public LinkedList<Skill> getAll(Skill entity) {
         return null;
     }
 
@@ -38,7 +43,7 @@ public class SkillDAO implements DataAccessObject<Skill> {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID)){
             preparedStatement.setInt(1, id);
-            return Converter.toSkill(preparedStatement.executeQuery()).get(0);
+            return SkillService.toSkill(preparedStatement.executeQuery()).get(0);
         } catch (SQLException throwables){
             throwables.printStackTrace();
         }
@@ -71,10 +76,10 @@ public class SkillDAO implements DataAccessObject<Skill> {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(Skill skill) {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(DELETE)){
-            preparedStatement.setInt(1, id);
+            preparedStatement.setInt(1, skill.getSkill_id());
             preparedStatement.executeUpdate();
         } catch (SQLException throwables){
             throwables.printStackTrace();

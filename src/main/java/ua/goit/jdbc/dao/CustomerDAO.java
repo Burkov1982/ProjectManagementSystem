@@ -2,7 +2,7 @@ package ua.goit.jdbc.dao;
 
 import ua.goit.jdbc.config.ConnectionManager;
 import ua.goit.jdbc.dao.model.Customer;
-import ua.goit.jdbc.service.Converter;
+import ua.goit.jdbc.service.CustomerService;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,10 +26,15 @@ public class CustomerDAO implements DataAccessObject<Customer> {
     public LinkedList<Customer> getAll() {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL)){
-            return Converter.toCustomer(preparedStatement.executeQuery());
+            return CustomerService.toCustomer(preparedStatement.executeQuery());
         } catch (SQLException throwables){
             throwables.printStackTrace();
         }
+        return null;
+    }
+
+    @Override
+    public LinkedList<Customer> getAll(Customer entity) {
         return null;
     }
 
@@ -38,7 +43,7 @@ public class CustomerDAO implements DataAccessObject<Customer> {
         try(Connection connection = connectionManager.getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID)){
             preparedStatement.setInt(1, id);
-            return Converter.toCustomer(preparedStatement.executeQuery()).get(0);
+            return CustomerService.toCustomer(preparedStatement.executeQuery()).get(0);
         }catch (SQLException throwables){
             throwables.printStackTrace();
         }
@@ -69,10 +74,10 @@ public class CustomerDAO implements DataAccessObject<Customer> {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(Customer customer) {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(DELETE)){
-            preparedStatement.setInt(1, id);
+            preparedStatement.setInt(1, customer.getCustomer_id());
             preparedStatement.executeUpdate();
         } catch (SQLException throwables){
             throwables.printStackTrace();

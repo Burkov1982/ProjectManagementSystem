@@ -2,7 +2,7 @@ package ua.goit.jdbc.dao;
 
 import ua.goit.jdbc.config.ConnectionManager;
 import ua.goit.jdbc.dao.model.Project;
-import ua.goit.jdbc.service.Converter;
+import ua.goit.jdbc.service.ProjectService;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -32,10 +32,15 @@ public class ProjectDAO implements DataAccessObject<Project> {
     public LinkedList<Project> getAll(){
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL)){
-            return Converter.toProject(preparedStatement.executeQuery());
+            return ProjectService.toProject(preparedStatement.executeQuery());
         }catch (SQLException throwables){
             throwables.printStackTrace();
         }
+        return null;
+    }
+
+    @Override
+    public LinkedList<Project> getAll(Project entity) {
         return null;
     }
 
@@ -44,7 +49,7 @@ public class ProjectDAO implements DataAccessObject<Project> {
         try(Connection connection = connectionManager.getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID)){
             preparedStatement.setInt(1, id);
-            return Converter.toProject(preparedStatement.executeQuery()).get(0);
+            return ProjectService.toProject(preparedStatement.executeQuery()).get(0);
         }catch (SQLException throwables){
             throwables.printStackTrace();
         }
@@ -81,10 +86,10 @@ public class ProjectDAO implements DataAccessObject<Project> {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(Project project) {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(DELETE)){
-            preparedStatement.setInt(1, id);
+            preparedStatement.setInt(1, project.getProject_id());
             preparedStatement.executeUpdate();
         } catch (SQLException throwables){
             throwables.printStackTrace();

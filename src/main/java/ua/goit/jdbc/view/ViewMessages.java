@@ -93,6 +93,14 @@ public class ViewMessages {
         return joiner.toString();
     }
 
+    public String joinListLinks(LinkedList<Link> links){
+        StringJoiner joiner = new StringJoiner("\n");
+        for (Link link:links){
+            joiner.add(link.toString());
+        }
+        return joiner.toString();
+    }
+
     public String joinListCustomers(LinkedList<Customer> customers){
         StringJoiner joiner = new StringJoiner("\n");
         for (Customer customer:customers){

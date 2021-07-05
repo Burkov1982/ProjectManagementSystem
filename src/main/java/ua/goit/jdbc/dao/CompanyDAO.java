@@ -2,7 +2,7 @@ package ua.goit.jdbc.dao;
 
 import ua.goit.jdbc.config.ConnectionManager;
 import ua.goit.jdbc.dao.model.Company;
-import ua.goit.jdbc.service.Converter;
+import ua.goit.jdbc.service.CompanyService;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,10 +29,15 @@ public class CompanyDAO  implements DataAccessObject<Company>{
     public LinkedList<Company> getAll() {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL)){
-            return Converter.toCompany(preparedStatement.executeQuery());
+            return CompanyService.toCompany(preparedStatement.executeQuery());
         } catch (SQLException throwables){
             throwables.printStackTrace();
         }
+        return null;
+    }
+
+    @Override
+    public LinkedList<Company> getAll(Company entity) {
         return null;
     }
 
@@ -41,7 +46,7 @@ public class CompanyDAO  implements DataAccessObject<Company>{
         try (Connection connection = connectionManager.getConnection();
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_COMPANY_BY_ID)){
             preparedStatement.setInt(1, id);
-            return Converter.toCompany(preparedStatement.executeQuery()).get(0);
+            return CompanyService.toCompany(preparedStatement.executeQuery()).get(0);
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -74,10 +79,10 @@ public class CompanyDAO  implements DataAccessObject<Company>{
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(Company company) {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(DELETE)){
-            preparedStatement.setInt(1, id);
+            preparedStatement.setInt(1, company.getCompany_id());
             preparedStatement.executeUpdate();
         } catch (SQLException throwables){
             throwables.printStackTrace();

@@ -6,6 +6,10 @@ import ua.goit.jdbc.dao.model.Company;
 import ua.goit.jdbc.dto.CompanyDTO;
 import ua.goit.jdbc.view.ViewMessages;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.LinkedList;
+
 public class CompanyService implements Service<CompanyDTO> {
     private ConnectionManager connectionManager;
     private CompanyDAO companyDAO;
@@ -18,18 +22,18 @@ public class CompanyService implements Service<CompanyDTO> {
 
     @Override
     public void create(CompanyDTO companyDTO){
-        Company company = Converter.toCompany(companyDTO);
+        Company company = toCompany(companyDTO);
         companyDAO.create(company);
     }
 
     @Override
-    public void delete(int id){
-        companyDAO.delete(id);
+    public void delete(CompanyDTO companyDTO){
+        companyDAO.delete(toCompany(companyDTO));
     }
 
     @Override
     public void update(CompanyDTO companyDTO){
-        Company company = Converter.toCompany(companyDTO);
+        Company company = toCompany(companyDTO);
         companyDAO.update(company);
     }
 
@@ -41,5 +45,35 @@ public class CompanyService implements Service<CompanyDTO> {
     @Override
     public String getAll(){
         return viewMessages.joinListCompanies(companyDAO.getAll());
+    }
+
+    @Override
+    public String getAll(CompanyDTO entity) {
+        return null;
+    }
+
+    public static Company toCompany(CompanyDTO companyDTO){
+        return new Company(companyDTO.getCompany_id(), companyDTO.getCompany_name(), companyDTO.getHeadquarters());
+    }
+
+    public static LinkedList<Company> toCompany(ResultSet resultSet){
+        try{
+            LinkedList<Company> companies = new LinkedList<>();
+            while (resultSet.next()){
+                Company company = new Company();
+                company.setCompany_id(resultSet.getInt("company_id"));
+                company.setCompany_name(resultSet.getString("company_name"));
+                company.setHeadquarters(resultSet.getString("headquarters"));
+                companies.addLast(company);
+            }
+            return companies;
+        } catch (SQLException throwables){
+            throwables.printStackTrace();
+        }
+        return null;
+    }
+
+    public static CompanyDTO fromCompany(Company company){
+        return new CompanyDTO(company.getCompany_id(), company.getCompany_name(), company.getHeadquarters());
     }
 }

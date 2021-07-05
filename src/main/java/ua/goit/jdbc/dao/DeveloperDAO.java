@@ -2,7 +2,7 @@ package ua.goit.jdbc.dao;
 
 import ua.goit.jdbc.config.ConnectionManager;
 import ua.goit.jdbc.dao.model.Developer;
-import ua.goit.jdbc.service.Converter;
+import ua.goit.jdbc.service.DeveloperService;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -40,7 +40,7 @@ public class DeveloperDAO implements DataAccessObject<Developer> {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(GET_DEVELOPERS_BY_BRANCH)){
             preparedStatement.setString(1, branch);
-            return Converter.toDeveloper(preparedStatement.executeQuery());
+            return DeveloperService.toDeveloper(preparedStatement.executeQuery());
         }catch (SQLException throwables){
             throwables.printStackTrace();
         }
@@ -51,7 +51,7 @@ public class DeveloperDAO implements DataAccessObject<Developer> {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(GET_DEVELOPERS_OF_PROJECT)){
             preparedStatement.setInt(1, id);
-            return Converter.toDeveloper(preparedStatement.executeQuery());
+            return DeveloperService.toDeveloper(preparedStatement.executeQuery());
         } catch (SQLException throwables){
             throwables.printStackTrace();
         }
@@ -76,10 +76,15 @@ public class DeveloperDAO implements DataAccessObject<Developer> {
     public LinkedList<Developer> getAll() {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL)){
-            return Converter.toDeveloper(preparedStatement.executeQuery());
+            return DeveloperService.toDeveloper(preparedStatement.executeQuery());
         }catch (SQLException throwables){
             throwables.printStackTrace();
         }
+        return null;
+    }
+
+    @Override
+    public LinkedList<Developer> getAll(Developer entity) {
         return null;
     }
 
@@ -88,7 +93,7 @@ public class DeveloperDAO implements DataAccessObject<Developer> {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID)){
                  preparedStatement.setInt(1, id);
-                 return Converter.toDeveloper(preparedStatement.executeQuery()).get(0);
+                 return DeveloperService.toDeveloper(preparedStatement.executeQuery()).get(0);
         } catch (SQLException throwables){
             throwables.printStackTrace();
         }
@@ -125,10 +130,10 @@ public class DeveloperDAO implements DataAccessObject<Developer> {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(Developer developer) {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(DELETE)){
-            preparedStatement.setInt(1, id);
+            preparedStatement.setInt(1, developer.getDeveloper_id());
             preparedStatement.executeUpdate();
         } catch (SQLException throwables){
             throwables.printStackTrace();
@@ -139,7 +144,7 @@ public class DeveloperDAO implements DataAccessObject<Developer> {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(GET_DEVELOPERS_BY_STAGE)){
             preparedStatement.setString(1, stage);
-            return Converter.toDeveloper(preparedStatement.executeQuery());
+            return DeveloperService.toDeveloper(preparedStatement.executeQuery());
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }

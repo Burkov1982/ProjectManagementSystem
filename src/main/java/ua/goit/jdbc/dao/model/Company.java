@@ -18,8 +18,9 @@ public class Company{
         return company_id;
     }
 
-    public void setCompany_id(Integer company_id) {
+    public Company setCompany_id(Integer company_id) {
         this.company_id = company_id;
+        return this;
     }
 
     public String getCompany_name() {
