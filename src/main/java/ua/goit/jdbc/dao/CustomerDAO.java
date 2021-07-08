@@ -6,10 +6,12 @@ import ua.goit.jdbc.service.CustomerService;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
 
 public class CustomerDAO implements DataAccessObject<Customer> {
+    private final Connection connection;
     private final ConnectionManager connectionManager;
 
     private static final String UPDATE = "UPDATE customers SET customer_name = ? WHERE customer_id = ?";
@@ -20,6 +22,7 @@ public class CustomerDAO implements DataAccessObject<Customer> {
 
     public CustomerDAO(ConnectionManager connectionManager) {
         this.connectionManager = connectionManager;
+        connection = connectionManager.getConnection();
     }
 
     @Override
@@ -34,53 +37,37 @@ public class CustomerDAO implements DataAccessObject<Customer> {
     }
 
     @Override
-    public LinkedList<Customer> getAll(Customer entity) {
+    public ResultSet getAll(Customer entity) {
         return null;
     }
 
     @Override
-    public Customer findById(Integer id) {
-        try(Connection connection = connectionManager.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID)){
+    public Customer findById(Integer id) throws SQLException {
+            PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID);
             preparedStatement.setInt(1, id);
             return CustomerService.toCustomer(preparedStatement.executeQuery()).get(0);
-        }catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
-        return null;
     }
 
     @Override
-    public void create(Customer entity) {
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(INSERT)){
+    public void create(Customer entity) throws SQLException {
+             PreparedStatement preparedStatement = connection.prepareStatement(INSERT);
             preparedStatement.setString(1, entity.getCustomer_name());
             preparedStatement.executeUpdate();
-        }catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
+
     }
 
     @Override
-    public void update(Customer entity) {
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE)){
-            preparedStatement.setString(1, entity.getCustomer_name());
-            preparedStatement.setInt(2, entity.getCustomer_id());
-            preparedStatement.executeUpdate();
-        } catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
+    public void update(Customer entity) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(UPDATE);
+        preparedStatement.setString(1, entity.getCustomer_name());
+        preparedStatement.setInt(2, entity.getCustomer_id());
+        preparedStatement.executeUpdate();
     }
 
     @Override
-    public void delete(Customer customer) {
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(DELETE)){
+    public void delete(Customer customer) throws SQLException {
+             PreparedStatement preparedStatement = connection.prepareStatement(DELETE);
             preparedStatement.setInt(1, customer.getCustomer_id());
             preparedStatement.executeUpdate();
-        } catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
     }
 }

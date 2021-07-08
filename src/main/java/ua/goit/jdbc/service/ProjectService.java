@@ -12,29 +12,27 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 
 public class ProjectService implements Service<ProjectDTO>{
-    private ConnectionManager cm;
-    private ProjectDAO projectDAO;
-    private ViewMessages viewMessages = new ViewMessages();
+    private final ProjectDAO projectDAO;
+    private final ViewMessages viewMessages = new ViewMessages();
 
     public ProjectService(ConnectionManager connectionManager){
-        this.cm = connectionManager;
-        projectDAO = new ProjectDAO(this.cm);
+        projectDAO = new ProjectDAO(connectionManager);
     }
 
     @Override
-    public void create(ProjectDTO projectDTO){
+    public void create(ProjectDTO projectDTO) throws SQLException{
         Project project = toProject(projectDTO);
         projectDAO.create(project);
     }
 
     @Override
-    public void update(ProjectDTO projectDTO){
+    public void update(ProjectDTO projectDTO) throws SQLException {
         Project project = toProject(projectDTO);
         projectDAO.update(project);
     }
 
     @Override
-    public String getById(int id){
+    public String getById(int id) throws SQLException {
         return projectDAO.findById(id).toString();
     }
 
@@ -49,7 +47,7 @@ public class ProjectService implements Service<ProjectDTO>{
     }
 
     @Override
-    public void delete(ProjectDTO projectDTO){
+    public void delete(ProjectDTO projectDTO) throws SQLException {
         projectDAO.delete(toProject(projectDTO));
     }
 

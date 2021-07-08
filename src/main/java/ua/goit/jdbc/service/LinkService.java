@@ -2,7 +2,6 @@ package ua.goit.jdbc.service;
 
 import ua.goit.jdbc.config.ConnectionManager;
 import ua.goit.jdbc.dao.LinksDAO;
-import ua.goit.jdbc.dao.model.Company;
 import ua.goit.jdbc.dao.model.Link;
 import ua.goit.jdbc.dto.LinkDTO;
 import ua.goit.jdbc.view.ViewMessages;
@@ -12,13 +11,14 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 
 public class LinkService implements Service<LinkDTO> {
-    private ConnectionManager connectionManager;
     private LinksDAO linksDAO;
-    private ViewMessages viewMessages = new ViewMessages();
+    private final ViewMessages viewMessages = new ViewMessages();
 
-    public LinkService(ConnectionManager connectionManager) {
-        this.connectionManager = connectionManager;
-        linksDAO = new LinksDAO(this.connectionManager);
+    public LinkService() {
+    }
+
+    public LinkService(ConnectionManager cm) {
+        linksDAO = new LinksDAO(cm);
     }
 
     @Override
@@ -27,8 +27,11 @@ public class LinkService implements Service<LinkDTO> {
     }
 
     @Override
-    public String getAll(LinkDTO entity) {
-        return viewMessages.joinListLinks(linksDAO.getAll(toLink(entity)));
+    public String getAll(LinkDTO entity) throws SQLException {
+        Link link = toLink(entity);
+        ResultSet resultSet = linksDAO.getAll(link);
+        LinkedList<Link> links = toLink(resultSet, entity.getTable());
+        return viewMessages.joinListLinks(links);
     }
 
     @Override
@@ -37,13 +40,19 @@ public class LinkService implements Service<LinkDTO> {
     }
 
     @Override
-    public void create(LinkDTO entity) {
+    public void create(LinkDTO entity) throws SQLException {
         linksDAO.create(toLink(entity));
     }
 
     @Override
-    public void delete(LinkDTO entity) {
+    public void delete(LinkDTO entity) throws SQLException {
         linksDAO.delete(toLink(entity));
+    }
+
+    public void update(LinkDTO linkDTO, LinkDTO oldLinkDTO) throws SQLException {
+        Link newLink = toLink(linkDTO);
+        Link oldLind = toLink(oldLinkDTO);
+        linksDAO.update(newLink, oldLind);
     }
 
     @Override
@@ -59,7 +68,7 @@ public class LinkService implements Service<LinkDTO> {
     public LinkedList<Link> toLink(ResultSet resultSet, String table){
         try{
             LinkedList<Link> links = new LinkedList<>();
-            if (table.toLowerCase().equals("customer_companies")){
+            if (table.equalsIgnoreCase("customers_companies")){
                 while (resultSet.next()){
                     Link link = new Link();
                     link.setTable(table);
@@ -68,9 +77,11 @@ public class LinkService implements Service<LinkDTO> {
                     link.setCompany_id(resultSet.getInt("company_id"));
                     link.setCustomer_id(resultSet.getInt("customer_id"));
                     link.setProject_id(resultSet.getInt("project_id"));
+
                     links.addLast(link);
                 }
-            } else if (table.toLowerCase().equals("project_developers")){
+            }
+            if (table.equalsIgnoreCase("project_developers")){
                 while (resultSet.next()){
                     Link link = new Link();
                     link.setTable(table);
@@ -79,17 +90,19 @@ public class LinkService implements Service<LinkDTO> {
                     link.setCompany_id(null);
                     link.setCustomer_id(null);
                     link.setProject_id(resultSet.getInt("project_id"));
+
                     links.addLast(link);
                 }
-            } else if (table.toLowerCase().equals("developer_skills")){
+            }
+            if (table.equalsIgnoreCase("developer_skills")){
                 while (resultSet.next()){
                     Link link = new Link();
                     link.setTable(table);
                     link.setDeveloper_id(resultSet.getInt("developer_id"));
                     link.setSkill_id(resultSet.getInt("skill_id"));
-                    link.setCompany_id(resultSet.getInt(null));
-                    link.setCustomer_id(resultSet.getInt(null));
-                    link.setProject_id(resultSet.getInt(null));
+                    link.setCompany_id(null);
+                    link.setCustomer_id(null);
+                    link.setProject_id(null);
                     links.addLast(link);
                 }
             }

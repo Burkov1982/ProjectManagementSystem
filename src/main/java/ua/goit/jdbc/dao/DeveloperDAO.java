@@ -11,7 +11,8 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 
 public class DeveloperDAO implements DataAccessObject<Developer> {
-    private ConnectionManager connectionManager;
+    private final Connection connection;
+    private final ConnectionManager connectionManager;
 
     private static final String UPDATE = "UPDATE developers SET first_name = ?, last_name = ?, gender = ?, salary = ?" +
             "WHERE developer_id = ?";
@@ -34,17 +35,13 @@ public class DeveloperDAO implements DataAccessObject<Developer> {
 
     public DeveloperDAO(ConnectionManager connectionManager) {
         this.connectionManager = connectionManager;
+        connection = connectionManager.getConnection();
     }
 
-    public LinkedList<Developer> getDevelopersByBranch(String branch){
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(GET_DEVELOPERS_BY_BRANCH)){
+    public LinkedList<Developer> getDevelopersByBranch(String branch) throws SQLException {
+            PreparedStatement preparedStatement = connection.prepareStatement(GET_DEVELOPERS_BY_BRANCH);
             preparedStatement.setString(1, branch);
             return DeveloperService.toDeveloper(preparedStatement.executeQuery());
-        }catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
-        return null;
     }
 
     public LinkedList<Developer> getDevelopersOfProjectById(Integer id){
@@ -58,18 +55,14 @@ public class DeveloperDAO implements DataAccessObject<Developer> {
         return null;
     }
 
-    public Integer getSumOfDevSelByProjId(Integer id){
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(SUM_OF_SAL_BY_PROJ_ID)){
+    public Integer getSumOfDevSelByProjId(Integer id) throws SQLException {
+            PreparedStatement preparedStatement = connection.prepareStatement(SUM_OF_SAL_BY_PROJ_ID);
             preparedStatement.setInt(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()){
                 return resultSet.getInt("sum");
             }
-        } catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
-        return null;
+            return null;
     }
 
     @Override
@@ -84,20 +77,15 @@ public class DeveloperDAO implements DataAccessObject<Developer> {
     }
 
     @Override
-    public LinkedList<Developer> getAll(Developer entity) {
+    public ResultSet getAll(Developer entity) {
         return null;
     }
 
     @Override
-    public Developer findById(Integer id) {
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID)){
-                 preparedStatement.setInt(1, id);
-                 return DeveloperService.toDeveloper(preparedStatement.executeQuery()).get(0);
-        } catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
-        return null;
+    public Developer findById(Integer id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID);
+        preparedStatement.setInt(1, id);
+        return DeveloperService.toDeveloper(preparedStatement.executeQuery()).get(0);
     }
 
     @Override
@@ -115,39 +103,27 @@ public class DeveloperDAO implements DataAccessObject<Developer> {
     }
 
     @Override
-    public void update(Developer entity) {
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE)){
+    public void update(Developer entity) throws SQLException {
+            PreparedStatement preparedStatement = connection.prepareStatement(UPDATE);
             preparedStatement.setString(1, entity.getFirst_name());
             preparedStatement.setString(2, entity.getLast_name());
             preparedStatement.setString(3, entity.getGender());
             preparedStatement.setInt(4, entity.getSalary());
             preparedStatement.setInt(5, entity.getDeveloper_id());
             preparedStatement.executeUpdate();
-        } catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
     }
 
     @Override
-    public void delete(Developer developer) {
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(DELETE)){
+    public void delete(Developer developer) throws SQLException {
+        Connection connection = connectionManager.getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(DELETE);
             preparedStatement.setInt(1, developer.getDeveloper_id());
             preparedStatement.executeUpdate();
-        } catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
     }
 
-    public LinkedList<Developer> getDevelopersByStage(String stage) {
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(GET_DEVELOPERS_BY_STAGE)){
+    public LinkedList<Developer> getDevelopersByStage(String stage) throws SQLException {
+            PreparedStatement preparedStatement = connection.prepareStatement(GET_DEVELOPERS_BY_STAGE);
             preparedStatement.setString(1, stage);
             return DeveloperService.toDeveloper(preparedStatement.executeQuery());
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return null;
     }
 }

@@ -1,30 +1,28 @@
 package ua.goit.jdbc.config;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
 public class ConnectionManager {
-    private String url;
-    private Properties properties;
+    private final Properties properties = new Properties();
 
     public ConnectionManager(){
-        try(InputStream in = Files.newInputStream(Paths.get("database.properties"))){
-            properties.load(in);
+        FileInputStream fis;
+        try {
+            fis = new FileInputStream("src/main/resources/database.properties");
+            properties.load(fis);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("ОШИБКА: Файл свойств отсуствует!");
         }
-        url = properties.getProperty("url");
     }
 
     public Connection getConnection(){
         try {
-            return DriverManager.getConnection(url, properties);
+            return DriverManager.getConnection(properties.getProperty("db.host"), properties.getProperty("db.login"),
+                    properties.getProperty("db.password"));
         } catch (SQLException throwables) {
             System.err.println(throwables.getMessage());
             throw new RuntimeException(throwables);

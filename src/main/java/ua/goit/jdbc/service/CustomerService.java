@@ -11,34 +11,32 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 
 public class CustomerService implements Service<CustomerDTO>{
-    private ConnectionManager connectionManager;
-    private CustomerDAO customerDAO;
-    private ViewMessages viewMessages = new ViewMessages();
+    private final CustomerDAO customerDAO;
+    private final ViewMessages viewMessages = new ViewMessages();
 
     public CustomerService(ConnectionManager connectionManager) {
-        this.connectionManager = connectionManager;
-        customerDAO = new CustomerDAO(this.connectionManager);
+        customerDAO = new CustomerDAO(connectionManager);
     }
 
     @Override
-    public void create(CustomerDTO customerDTO){
+    public void create(CustomerDTO customerDTO) throws SQLException {
         Customer customer = toCustomer(customerDTO);
         customerDAO.create(customer);
     }
 
     @Override
-    public void delete(CustomerDTO customerDTO){
+    public void delete(CustomerDTO customerDTO) throws SQLException {
         customerDAO.delete(toCustomer(customerDTO));
     }
 
     @Override
-    public void update(CustomerDTO customerDTO){
+    public void update(CustomerDTO customerDTO) throws SQLException {
         Customer customer = toCustomer(customerDTO);
         customerDAO.update(customer);
     }
 
     @Override
-    public String getById(int id){
+    public String getById(int id) throws SQLException {
         return customerDAO.findById(id).toString();
     }
 

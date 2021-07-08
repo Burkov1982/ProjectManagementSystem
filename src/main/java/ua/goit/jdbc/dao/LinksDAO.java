@@ -3,7 +3,6 @@ package ua.goit.jdbc.dao;
 import ua.goit.jdbc.config.ConnectionManager;
 import ua.goit.jdbc.dao.model.Link;
 import ua.goit.jdbc.service.LinkService;
-import ua.goit.jdbc.view.ViewMessages;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,21 +12,41 @@ import java.util.LinkedList;
 
 public class LinksDAO implements DataAccessObject<Link>{
 
-    private static final String DELETE_LINK = "DELETE FROM ? WHERE ?";
-    private static final String UPDATE_LINK = "UPDATE ? SET ? WHERE ?";
-    private static final String INSERT_LINK_PATTERN = "INSERT INTO ? (?) VALUES (?)";
-    private static final String CUSTOMER_COMPANIES = "%s, %s, %s";
-    private static final String PROJECT_DEVELOPERS = "%s, %s";
-    private static final String DEVELOPER_SKILLS = "%s, %s";
-    private static final String GET_ALL_PATTERN = "SELECT ? FROM ?";
 
-    private final ConnectionManager cm;
-    private final LinkService linkService;
-    private final ViewMessages viewMessages = new ViewMessages();
+    private static final String INSERT_CUSTOMER_COMPANIES = "INSERT INTO customers_companies " +
+            "(customer_id, company_id, project_id) VALUES (?, ?, ?)";
+    private static final String INSERT_PROJECT_DEVELOPERS = "INSERT INTO project_developers" +
+            "(project_id, developer_id) VALUES (?, ?)";
+    private static final String INSERT_DEVELOPER_SKILLS = "INSERT INTO developer_skills (skill_id, developer_id) VALUES" +
+            "(?, ?)";
+
+    private static final String DELETE_CUSTOMER_COMPANIES = "DELETE FROM customers_companies WHERE " +
+            "customer_id = ? AND company_id = ? AND project_id = ?";
+    private static final String DELETE_PROJECT_DEVELOPERS = "DELETE FROM project_developers WHERE " +
+            "project_id = ? AND developer_id = ?";
+    private static final String DELETE_DEVELOPER_SKILLS = "DELETE FROM developer_skills WHERE " +
+            "skill_id = ? AND developer_id = ?";
+
+    private static final String UPDATE_CUSTOMER_COMPANIES = "UPDATE customers_companies " +
+            "SET customer_id = ?, company_id = ?, project_id = ? " +
+            "WHERE customer_id = ? AND company_id = ? AND project_id = ?";
+    private static final String UPDATE_PROJECT_DEVELOPERS = "UPDATE project_developers " +
+            "SET project_id = ?, developer_id = ? " +
+            "WHERE project_id = ? AND developer_id = ?";
+    private static final String UPDATE_DEVELOPER_SKILLS = "UPDATE developer_skills " +
+            "SET skill_id = ?, developer_id = ? " +
+            "WHERE Skill_id = ? AND developer_id = ?";
+
+    private static final String SELECT_CUSTOMERS_COMPANIES = "SELECT customer_id, company_id, project_id" +
+            " FROM customers_companies";
+    private static final String SELECT_PROJECT_DEVELOPERS = "SELECT project_id, developer_id FROM project_developers";
+    private static final String SELECT_DEVELOPER_SKILLS = "SELECT skill_id, developer_id FROM developer_skills";
+
+    private final Connection connection;
+    private final LinkService linkService = new LinkService();
 
     public LinksDAO(ConnectionManager connectionManager) {
-        cm = connectionManager;
-        linkService = new LinkService(cm);
+        connection = connectionManager.getConnection();
     }
 
     @Override
@@ -36,45 +55,23 @@ public class LinksDAO implements DataAccessObject<Link>{
     }
 
     @Override
-    public LinkedList<Link> getAll(Link entity) {
-        try (Connection connection = cm.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL_PATTERN)){
+    public ResultSet getAll(Link entity) throws SQLException {
+        String table = entity.getTable();
 
-            String table = entity.getTable();
-            Integer project_id = entity.getProject_id();
-            Integer customer_id = entity.getCustomer_id();
-            Integer company_id = entity.getCompany_id();
-            Integer developer_id = entity.getDeveloper_id();
-            Integer skill_id = entity.getSkill_id();
-
-            if (table.toLowerCase().equals("customer_companies") && customer_id!=null
-                    && company_id!=null && project_id!=null){
-                preparedStatement.setString(2, table.toLowerCase());
-                preparedStatement.setString(1, String.format(CUSTOMER_COMPANIES,
-                        "customer_id", "company_id", "project_id"));
-                ResultSet resultSet = preparedStatement.executeQuery();
-                return linkService.toLink(resultSet, entity.getTable());
-
-            } else if (table.toLowerCase().equals("project_developers") && project_id!=null
-                    && developer_id!=null){
-                preparedStatement.setString(2, table.toLowerCase());
-                preparedStatement.setString(1, String.format(PROJECT_DEVELOPERS,
-                        "project_id", "developer_id"));
-                ResultSet resultSet = preparedStatement.executeQuery();
-                return  linkService.toLink(resultSet, entity.getTable());
-
-            } else if (table.toLowerCase().equals("developer_skills") && developer_id!=null && skill_id!=null){
-                preparedStatement.setString(2, table.toLowerCase());
-                preparedStatement.setString(1, String.format(DEVELOPER_SKILLS,
-                        "skill_id", "developer_id"));
-                ResultSet resultSet = preparedStatement.executeQuery();
-                return linkService.toLink(resultSet, entity.getTable());
+            if (table.equalsIgnoreCase("customers_companies")){
+                PreparedStatement preparedStatement = connection.prepareStatement(SELECT_CUSTOMERS_COMPANIES);
+                return preparedStatement.executeQuery();
+            }
+            if (table.equalsIgnoreCase("project_developers")){
+                PreparedStatement preparedStatement = connection.prepareStatement(SELECT_PROJECT_DEVELOPERS);
+                return preparedStatement.executeQuery();
 
             }
-        } catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
-        return null;
+            if (table.equalsIgnoreCase("developer_skills")){
+                PreparedStatement preparedStatement = connection.prepareStatement(SELECT_DEVELOPER_SKILLS);
+                return preparedStatement.executeQuery();
+            }
+            return null;
     }
 
     @Override
@@ -83,10 +80,7 @@ public class LinksDAO implements DataAccessObject<Link>{
     }
 
     @Override
-    public void create(Link entity) {
-        try (Connection connection = cm.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_LINK_PATTERN)){
-
+    public void create(Link entity) throws SQLException {
             String table = entity.getTable();
             Integer project_id = entity.getProject_id();
             Integer customer_id = entity.getCustomer_id();
@@ -94,98 +88,110 @@ public class LinksDAO implements DataAccessObject<Link>{
             Integer developer_id = entity.getDeveloper_id();
             Integer skill_id = entity.getSkill_id();
 
-            if (table.toLowerCase().equals("customer_companies") && customer_id!=null
-                    && company_id!=null && project_id!=null){
-                preparedStatement.setString(1, table.toLowerCase());
-                preparedStatement.setString(2, String.format(CUSTOMER_COMPANIES,
-                        "customer_id", "company_id", "project_id"));
-                preparedStatement.setString(3, String.format(CUSTOMER_COMPANIES,
-                        customer_id, company_id, project_id));
-                preparedStatement.executeUpdate();
-            } else if (table.toLowerCase().equals("project_developers") && project_id!=null
-                    && developer_id!=null){
-                preparedStatement.setString(1, table.toLowerCase());
-                preparedStatement.setString(2, String.format(PROJECT_DEVELOPERS,
-                        "project_id", "developer_id"));
-                preparedStatement.setString(3, String.format(PROJECT_DEVELOPERS,
-                        project_id, developer_id));
-                preparedStatement.executeUpdate();
-            } else if (table.toLowerCase().equals("developer_skills") && developer_id!=null && skill_id!=null){
-                preparedStatement.setString(1, table.toLowerCase());
-                preparedStatement.setString(2, String.format(DEVELOPER_SKILLS,
-                        "skill_id", "developer_id"));
-                preparedStatement.setString(3, String.format(DEVELOPER_SKILLS,
-                        skill_id, developer_id));
-                preparedStatement.executeUpdate();
+            if (table.equalsIgnoreCase("customers_companies")){
+                try  (PreparedStatement preparedStatement = connection.prepareStatement(INSERT_CUSTOMER_COMPANIES)){
+                    preparedStatement.setInt(1, customer_id);
+                    preparedStatement.setInt(2, company_id);
+                    preparedStatement.setInt(3, project_id);
+                    preparedStatement.executeUpdate();   
+                }
+            } else if (table.equalsIgnoreCase("project_developers")){
+                try  (PreparedStatement preparedStatement = connection.prepareStatement(INSERT_PROJECT_DEVELOPERS)){
+                    preparedStatement.setInt(1, project_id);
+                    preparedStatement.setInt(2, developer_id);
+                    preparedStatement.executeUpdate();
+                }
+            } else if (table.equalsIgnoreCase("developer_skills")){
+                try  (PreparedStatement preparedStatement = connection.prepareStatement(INSERT_DEVELOPER_SKILLS)){
+                    preparedStatement.setInt(1, skill_id);
+                    preparedStatement.setInt(2, developer_id);
+                    preparedStatement.executeUpdate();
+                }
             }
-        } catch (SQLException throwables){
-            throwables.printStackTrace();
-        }
+    }
+
+    public void update(Link entity, Link oldEntity) throws SQLException {
+        String table = entity.getTable();
+
+        Integer project_id = entity.getProject_id();
+        Integer customer_id = entity.getCustomer_id();
+        Integer company_id = entity.getCompany_id();
+        Integer developer_id = entity.getDeveloper_id();
+        Integer skill_id = entity.getSkill_id();
+
+        Integer old_project_id = oldEntity.getProject_id();
+        Integer old_customer_id = oldEntity.getCustomer_id();
+        Integer old_company_id = oldEntity.getCompany_id();
+        Integer old_developer_id = oldEntity.getDeveloper_id();
+        Integer old_skill_id = oldEntity.getSkill_id();
+
+
+            if (table.equalsIgnoreCase("customers_companies")){
+                try  (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_CUSTOMER_COMPANIES)){
+                    preparedStatement.setInt(1, customer_id);
+                    preparedStatement.setInt(2, company_id);
+                    preparedStatement.setInt(3, project_id);
+
+                    preparedStatement.setInt(4, old_customer_id);
+                    preparedStatement.setInt(5, old_company_id);
+                    preparedStatement.setInt(6, old_project_id);
+
+                    preparedStatement.executeUpdate();
+                }
+            } else if (table.equalsIgnoreCase("project_developers")){
+                try  (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_PROJECT_DEVELOPERS)){
+                    preparedStatement.setInt(1, project_id);
+                    preparedStatement.setInt(2, developer_id);
+
+                    preparedStatement.setInt(3, old_project_id);
+                    preparedStatement.setInt(4, old_developer_id);
+                    preparedStatement.executeUpdate();
+                }
+            } else if (table.equalsIgnoreCase("developer_skills")){
+                try  (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_DEVELOPER_SKILLS)){
+                    preparedStatement.setInt(1, skill_id);
+                    preparedStatement.setInt(2, developer_id);
+
+                    preparedStatement.setInt(3, old_skill_id);
+                    preparedStatement.setInt(4, old_developer_id);
+                    preparedStatement.executeUpdate();
+                }
+            }
     }
 
     @Override
-    public void update(Link entity) {
-        try (Connection connection = cm.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_LINK)){
-            String table = entity.getTable();
-            switch (table){
-                case "customer_companies":
-                    preparedStatement.setString(1, table);
-                    preparedStatement.setString(2, String.format(CUSTOMER_COMPANIES,
-                            "customer_id = "+entity.getCustomer_id()+", ", "company_id = "+entity.getCompany_id()+", ",
-                            "project_id = "+entity.getProject_id()));
-                    preparedStatement.setString(3, String.format("%s, %s",
-                            "company_id = "+entity.getCompany_id()+", ", "project_id = "+entity.getProject_id()+", "));
-                    preparedStatement.executeUpdate();
-                    break;
-                case "project_developers":
-                    preparedStatement.setString(1, table);
-                    preparedStatement.setString(2, String.format(PROJECT_DEVELOPERS,
-                            "project_id = "+entity.getProject_id()+", ", "developer_id = "+entity.getDeveloper_id()));
-                    preparedStatement.setString(3, "developer_id = "+entity.getDeveloper_id());
-                    preparedStatement.executeUpdate();
-                    break;
-                case "developer_skills":
-                    preparedStatement.setString(1, table);
-                    preparedStatement.setString(2, String.format(DEVELOPER_SKILLS,
-                            "skill_id = "+entity.getSkill_id()+", ", "developer_id"+entity.getDeveloper_id()));
-                    preparedStatement.setString(3, "developer_id = "+entity.getDeveloper_id());
-                    preparedStatement.executeUpdate();
-                    break;
-            }
-        } catch (SQLException e){
-            e.printStackTrace();
-        }
-    }
+    public void update(Link entity) {}
 
     @Override
-    public void delete(Link link) {
-        try(Connection connection = cm.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(DELETE_LINK)){
-            String table = link.getTable();
-            String customer_id = "customer_id = "+link.getCustomer_id();
-            String company_id = "company_id = "+link.getCompany_id();
-            String developer_id = "developer_id = "+link.getDeveloper_id();
-            String skill_id = "skill_id = "+link.getSkill_id();
-            String project_id = "project_id = "+link.getProject_id();
-            switch (table){
-                case "customer_companies":
-                    preparedStatement.setString(1, table);
-                    preparedStatement.setString(2, String.format(CUSTOMER_COMPANIES, customer_id,
-                            company_id, project_id));
-                    preparedStatement.executeUpdate();
-                    break;
-                case "developer_skills":
-                    preparedStatement.setString(1, table);
-                    preparedStatement.setString(2, String.format(DEVELOPER_SKILLS, skill_id, developer_id));
-                    preparedStatement.executeUpdate();
-                    break;
-                case "project_developers":
-                    preparedStatement.setString(1, table);
-                    preparedStatement.setString(2, String.format(PROJECT_DEVELOPERS, project_id, developer_id));
-                    preparedStatement.executeUpdate();
-                    break;
+    public void delete(Link entity) throws SQLException {
+
+        String table = entity.getTable();
+        Integer project_id = entity.getProject_id();
+        Integer customer_id = entity.getCustomer_id();
+        Integer company_id = entity.getCompany_id();
+        Integer developer_id = entity.getDeveloper_id();
+        Integer skill_id = entity.getSkill_id();
+
+        if (table.equalsIgnoreCase("customers_companies")) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(DELETE_CUSTOMER_COMPANIES)) {
+                preparedStatement.setInt(1, customer_id);
+                preparedStatement.setInt(2, company_id);
+                preparedStatement.setInt(3, project_id);
+                preparedStatement.executeUpdate();
             }
-        } catch (SQLException e){}
+        } else if (table.equalsIgnoreCase("project_developers")) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(DELETE_PROJECT_DEVELOPERS)) {
+                preparedStatement.setInt(1, project_id);
+                preparedStatement.setInt(2, developer_id);
+                preparedStatement.executeUpdate();
+            }
+        } else if (table.equalsIgnoreCase("developer_skills")) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(DELETE_DEVELOPER_SKILLS)) {
+                preparedStatement.setInt(1, skill_id);
+                preparedStatement.setInt(2, developer_id);
+                preparedStatement.executeUpdate();
+            }
+        }
     }
 }
+

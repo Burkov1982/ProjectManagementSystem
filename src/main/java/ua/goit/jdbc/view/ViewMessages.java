@@ -28,37 +28,9 @@ public class ViewMessages {
         developerService = new DeveloperService(this.connectionManager);
     }
 
-    public String startMessage(){
-        return "Приветствую в ProjectManagementSystem! \n";
-    }
-
-    public String sumOfSalariesOnProjectById(){
-        StringBuilder message = new StringBuilder("Сумму зарплат разработчиков какого проекта Вы хотите получить?" +
-                " (Введите идентификатор проекта) \n");
-        LinkedList<Project> listOfProjects = projectService.getAllInList();
-        for (Project project:listOfProjects){
-            message.append(String.format("%d - %s \n", project.getProject_id(), project.getProject_name()));
-        }
-        return message.toString();
-    }
 
     public String sumSelectQueryResult(Integer result){
         return String.format("Сумма зарплат всех разработчиков, выбраного Вами, проекта: %d", result);
-    }
-
-    public String errorMessage(){
-        return "Введите корректные данные, пожалуйста.";
-    }
-
-    public String getDevelopersOfProjectById(){
-        StringBuilder message = new StringBuilder("Список разработчиков какого проекта Вы хотите получить?" +
-                " (Введите идентификатор проекта) \n");
-
-        LinkedList<Project> listOfProjects = projectService.getAllInList();
-        for (Project project:listOfProjects){
-            message.append(String.format("%d - %s \n", project.getProject_id(), project.getProject_name()));
-        }
-        return message.toString();
     }
 
     public String joinListDevelopers(LinkedList<Developer> developers){
@@ -109,27 +81,6 @@ public class ViewMessages {
         return joiner.toString();
     }
 
-    public String getDevelopersByLang(){
-        StringBuilder message = new StringBuilder("Список разработчиков какой специализации Вы хотите получить? \n");
-        LinkedList<Skill> skills = skillService.getAllInList();
-        String temp = null;
-        for (Skill skill:skills) {
-            if (!skill.getBranch().equals(temp)){
-                temp = skill.getBranch();
-                message.append(String.format("- %s \n", skill.getBranch()));
-            }
-        }
-        return message.toString();
-    }
-
-    public String getDevelopersByStage() {
-        StringBuilder message = new StringBuilder("Список разработчиков какого уровня Вы хотите получить? \n");
-        message.append(String.format("- %s \n", "Junior"));
-        message.append(String.format("- %s \n", "Middle"));
-        message.append(String.format("- %s \n", "Senior"));
-        return message.toString();
-    }
-
     public String getAllProjectModified(){
         LinkedList<Project> projects = projectService.getAllInList();
 
@@ -140,9 +91,5 @@ public class ViewMessages {
                     , project.getStart_date(), project.getProject_name(), amountOfDevsOnProject));
         }
         return message.toString();
-    }
-
-    public String successfulMessage() {
-        return "Ваш запрос успешно обработан";
     }
 }

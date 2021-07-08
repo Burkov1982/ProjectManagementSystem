@@ -13,12 +13,10 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 
 public class SkillService implements Service<SkillDTO>{
-    private ViewMessages viewMessages = new ViewMessages();
-    private ConnectionManager connectionManager;
-    private SkillDAO skillDAO;
+    private final ViewMessages viewMessages = new ViewMessages();
+    private final SkillDAO skillDAO;
 
     public SkillService(ConnectionManager connectionManager) {
-        this.connectionManager = connectionManager;
         skillDAO = new SkillDAO(connectionManager);
     }
 
@@ -33,33 +31,28 @@ public class SkillService implements Service<SkillDTO>{
     }
 
     @Override
-    public void create(SkillDTO skillDTO){
+    public void create(SkillDTO skillDTO) throws SQLException {
         Skill skill = toSkill(skillDTO);
         skillDAO.create(skill);
     }
 
     @Override
-    public void delete(SkillDTO skillDTO){
+    public void delete(SkillDTO skillDTO) throws SQLException {
         skillDAO.delete(toSkill(skillDTO));
     }
 
     @Override
-    public String getById(int id){
+    public String getById(int id) throws SQLException {
         return skillDAO.findById(id).toString();
     }
 
     @Override
-    public void update(SkillDTO skillDTO){
+    public void update(SkillDTO skillDTO) throws SQLException {
         Skill skill = toSkill(skillDTO);
         skillDAO.update(skill);
     }
 
     public LinkedList<Skill> getAllInList(){return skillDAO.getAll();}
-
-    public static ProjectDTO fromProject(Project project){
-        return new ProjectDTO(project.getProject_id(), project.getProject_name(), project.getProject_description(),
-                project.getCost(), project.getStart_date());
-    }
 
     public static Skill toSkill(SkillDTO skillDTO){
         return new Skill(skillDTO.getSkill_id(), skillDTO.getBranch(), skillDTO.getStage());

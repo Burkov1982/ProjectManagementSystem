@@ -11,13 +11,11 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 
 public class DeveloperService implements Service<DeveloperDTO>{
-    private ConnectionManager connectionManager;
-    private DeveloperDAO developerDAO;
-    private ViewMessages viewMessages = new ViewMessages();
+    private final DeveloperDAO developerDAO;
+    private final ViewMessages viewMessages = new ViewMessages();
 
     public DeveloperService(ConnectionManager connectionManager) {
-        this.connectionManager = connectionManager;
-        developerDAO = new DeveloperDAO(this.connectionManager);
+        developerDAO = new DeveloperDAO(connectionManager);
     }
 
     @Override
@@ -27,18 +25,18 @@ public class DeveloperService implements Service<DeveloperDTO>{
     }
 
     @Override
-    public void update(DeveloperDTO developerDTO){
+    public void update(DeveloperDTO developerDTO) throws SQLException {
         Developer developer = toDeveloper(developerDTO);
         developerDAO.update(developer);
     }
 
     @Override
-    public void delete(DeveloperDTO developerDTO){
+    public void delete(DeveloperDTO developerDTO) throws SQLException {
         developerDAO.delete(toDeveloper(developerDTO));
     }
 
     @Override
-    public String getById(int id){
+    public String getById(int id) throws SQLException {
         return developerDAO.findById(id).toString();
     }
 
@@ -97,30 +95,27 @@ public class DeveloperService implements Service<DeveloperDTO>{
         }
     }
 
-    public String getSumDevSalInProjById(Integer project_id) {
+    public String getSumDevSalInProjById(Integer project_id) throws SQLException {
         if (project_id != null){
             Integer sum = developerDAO.getSumOfDevSelByProjId(project_id);
             return viewMessages.sumSelectQueryResult(sum);
-        } else {
-            return viewMessages.errorMessage();
         }
+        return null;
     }
 
-    public String getDevByBranch(String branch) {
+    public String getDevByBranch(String branch) throws SQLException {
         if (branch != null){
             LinkedList<Developer> developers = developerDAO.getDevelopersByBranch(branch);
             return viewMessages.joinListDevelopers(developers);
-        } else {
-            return viewMessages.errorMessage();
         }
+        return null;
     }
 
-    public String getDevByStage(String stage) {
+    public String getDevByStage(String stage) throws SQLException {
         if (stage != null){
             LinkedList<Developer> developers = developerDAO.getDevelopersByStage(stage);
             return viewMessages.joinListDevelopers(developers);
-        } else {
-            return viewMessages.errorMessage();
         }
+        return null;
     }
 }
